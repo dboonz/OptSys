@@ -10,6 +10,8 @@ import sys
 import pdb
 
 # Scipy and related imports
+from functools import lru_cache
+
 import numpy as np
 import scipy.linalg as lin
 import scipy.ndimage as ndim
@@ -198,6 +200,8 @@ class OpticalObject(object):
         T[2, 2] = 1
 
         return R.dot(T)
+
+
 class Sensor(OpticalObject):
     ''' Class definition for a sensor object'''
     def __init__(self, aperture, pos, theta, name='Sensor'):
@@ -221,6 +225,7 @@ class Sensor(OpticalObject):
         # Extra parameters
         self.type = 'sensor'
 
+
     def _get_angle(self, point, lmb, dest):
         '''
             Angle after propagation. Since this is a sensor, return NaN to flag
@@ -235,6 +240,132 @@ class Sensor(OpticalObject):
                 theta: NaN, since this is a sensor
         '''
         return float('NaN')
+
+
+class LightGuide(OpticalObject):
+    ''' Class definition for a LightGuide object.
+
+    A lightguide, such as an optical fiber only accepts light that falls both within an aperture
+    and within an acceptance angle. This class allows to define an aperture that only accepts rays
+    up to an angle given by the NA.
+    '''
+
+    def __init__(self, aperture, pos, theta, name='Lightguide', NA=0.4):
+        '''
+            Constructor for sensor object. Sensor is simply a plan which blocks
+            all rays
+
+            Inputs:
+                aperture: Size of sensor
+                pos: Position of sensor in 2D cartesian grid
+                theta: Inclination of sensor w.r.t Y axis [radians]
+                name: Name of the optical component. If Empty string, generic
+                    name is assigned. If None, no name is printed.
+
+            Outputs:
+                None.
+        '''
+        # Initialize parent optical object parameters
+        OpticalObject.__init__(self, aperture, pos, theta, name)
+
+        # Extra parameters
+        self.type = 'Lightguide'
+        self.NA = NA
+
+
+    def _get_angle(self, point, lmb, dest):
+        '''
+            Angle after propagation. Since this is a sensor, return NaN to flag
+            end of ray
+
+            Inputs:
+                point: 3-tuple point with x, y, angle
+                lmb: Wavelength of ray. Only needed for grating
+                dest: 2D coordinate of interesection of ray with plane
+
+            Outputs:
+                theta: NaN, since this is a sensor
+        '''
+        max_angle = np.arcsin(self.NA)
+        if abs(point[-1]+self.theta) < max_angle:
+            return point[-1] * 0
+        return float('NaN')
+
+class LinearFilter(OpticalObject):
+    """ Class for a linear spectral filter. This is a bandpass filter where the transmitted wavelengths depend on the y position.
+
+    At the moment only works for theta==0, but this could easily be changed.
+
+    """
+    def __init__(self, aperture, pos, theta, name='Lin. Filter',
+                 wl_min_nm=300, wl_max_nm=700, window_width_nm=10):
+        '''Constructor for lens object.
+
+            Inputs:
+                aperture: Aperture size
+                pos: Position of lens in 2D cartesian grid
+                theta: Inclination of lens w.r.t Y axis. Must be 0.
+                name: Name of the optical component. If Empty string, generic
+                    name is assigned. If None, no name is printed.
+                wl_min_nm: Wavelength that is transmitted at the lower end of the filter
+                wl_max_nm: Wavelength that is transmitted at the higher end of the filter
+                window_width_nm: Window width in nanometer.
+
+            Outputs:
+                None.
+        '''
+
+        assert theta == 0, 'Theta != 0 is not implemented at the moment'
+        OpticalObject.__init__(self, aperture, pos, theta, name)
+        self.type = 'Linear Filter'
+        self.wl_min = wl_min_nm * 1e-9
+        self.wl_max = wl_max_nm * 1e-9
+        self.window_width_nm = window_width_nm
+
+    def _get_angle(self, point, lmb, dest):
+
+        """
+                point: 3-tuple point with x, y, angle
+                lmb: Wavelenght of ray. Only needed for grating
+                dest: 2D coordinate of interesection of ray with plane
+
+        """
+        # coordinates of the origin of the beam
+        x, y, angle = point
+        # coordinates at the interface with our surface
+        x,y,angle_ = tuple(dest.flatten())
+
+        angle = point[-1]
+        # calculate the central wavelength at this point
+        center_wavelength = self._calc_center_wavelength(y)
+        # check if we're within the central window, if so, transmit, if not, don't.
+        d_wl = abs(lmb-center_wavelength)*1e9
+        if d_wl < self.window_width_nm:
+            return angle
+        else:
+            return np.nan
+
+    @lru_cache
+    def _calc_center_wavelength(self, y):
+        """Calculate the central wavelength at position y"""
+        y = np.array(y)
+        y = y - self.pos[1]
+        center_wl = self.wl_min/2 + self.wl_max / 2
+        steepness = (self.wl_max - self.wl_min) / self.aperture
+        return center_wl +  steepness * y/2
+
+    def plot_transmittance(self):
+        # plot the transmittance
+        import matplotlib.pyplot as plt
+        positions = np.linspace(-self.aperture, self.aperture, 50)
+        center_wavelengths = self._calc_center_wavelength(tuple(list(positions))) * 1e9
+        plt.plot(positions, center_wavelengths)
+        plt.fill_between(positions, center_wavelengths-self.window_width_nm, center_wavelengths+self.window_width_nm)
+        plt.xlabel('Position [mm]')
+        plt.ylabel('Central wavelength [nm]')
+        plt.show()
+
+
 
 class Lens(OpticalObject):
     ''' Class definition for lens object'''
