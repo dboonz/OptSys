@@ -86,3 +86,4 @@ if __name__ == '__main__':
 
     # Save a copy
     canvas.save('grating.png')
+    plt.show()

@@ -129,8 +129,30 @@ class Canvas(object):
                                                  color='b')
                 self.axes.add_artist(aperture_img)
                 aperture_img.set_alpha(0.5)
+
+            elif component.type == "Lightguide":
+                # small rectangle
+                aperture_img = patches.Rectangle(xy=xy,
+                                                 width=component.aperture * 0.3,
+                                                 height=component.aperture,
+                                                 angle=-component.theta * 180 / np.pi,
+                                                 color='g', hatch='.O')
+                self.axes.add_artist(aperture_img)
+                aperture_img.set_alpha(0.5)
+
+            elif component.type == 'Linear Filter':
+                # rectangle with varying colour and some lines to distinguish it from a sensor
+
+                aperture_img = patches.Rectangle(xy=xy,
+                                                 width=component.aperture * 0.3,
+                                                 height=component.aperture,
+                                                 angle=-component.theta * 180 / np.pi,
+                                                 color='b', hatch='/////')
+                self.axes.add_artist(aperture_img)
+                aperture_img.set_alpha(0.5)
+
             else:
-                raise ValueError("Invalid component name")
+                raise ValueError(f"Invalid component name '{component.type}'")
 
             # Post addition
             if component.name is not None:
@@ -161,7 +183,7 @@ class Canvas(object):
 
         # Make sure number of rays and number of colors are same
         if len(ray_bundles) != len(colors):
-            raise ValueError("Need same number of colors as rays")
+            raise ValueError(f"Need same number of colors as rays. Got {len(ray_bundles)} rays and {len(colors)} colors.")
 
         if len(ray_bundles) != len(colors):
             raise ValueError("Need same number of members as rays")

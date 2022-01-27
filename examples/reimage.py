@@ -53,3 +53,4 @@ if __name__ == '__main__':
 
     # Save a copy
     canvas.save('reimage.png')
+    plt.show()

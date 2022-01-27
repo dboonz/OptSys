@@ -245,7 +245,7 @@ class Sensor(OpticalObject):
 class LightGuide(OpticalObject):
     ''' Class definition for a LightGuide object.
 
-    A lightguide, such as an optical fiber only accepts light that falls both within an aperture
+    Most waveguides, such as optical fibers, only accept light that falls both within an aperture
     and within an acceptance angle. This class allows to define an aperture that only accepts rays
     up to an angle given by the NA.
     '''
