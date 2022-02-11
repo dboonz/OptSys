@@ -2,14 +2,14 @@
 
 import os, sys
 
-sys.path.append('../modules')
+
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-import raytracing as rt
-import visualize as vis
-import ray_utilities
+from OptSys import raytracing as rt
+from OptSys import visualize as vis
+from OptSys import ray_utilities
 
 if __name__ == '__main__':
     # Create a spectrometer using a simple 4f system and diffraction grating

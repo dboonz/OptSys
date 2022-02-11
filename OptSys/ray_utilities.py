@@ -3,8 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-import raytracing as rt
-import visualize as vis
+from . import raytracing as rt
+from . import visualize as vis
 
 def initial_rays(scene, objective, nrays=10):
     '''

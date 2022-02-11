@@ -2,7 +2,7 @@
 
 import os, sys
 
-sys.path.append('../modules')
+sys.path.append('../OptSys')
 
 import numpy as np
 import matplotlib.pyplot as plt

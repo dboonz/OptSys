@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('../modules')
+# sys.path.append('../OptSys')
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-import raytracing as rt
-import visualize as vis
-import ray_utilities
+from OptSys import raytracing as rt
+from OptSys import visualize as vis
+from OptSys import ray_utilities
 
 if __name__ == '__main__':
     # System to test a DMD imager

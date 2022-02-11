@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import matplotlib.axes
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -7,13 +7,13 @@ from matplotlib import patches
 from matplotlib import lines
 from matplotlib import cm
 
-import raytracing as rt
+from . import raytracing as rt
 
 class Canvas(object):
     '''
         Class definition for canvas to draw components and rays
     '''
-    def __init__(self, xlim, ylim, bbox=None, figsize=None, dpi=100):
+    def __init__(self, xlim, ylim, bbox=None, figsize=None, dpi=300, axes: matplotlib.axes.Axes=None):
         '''
             Function to initialize a blank canvas.
 
@@ -30,8 +30,12 @@ class Canvas(object):
                 None
         '''
         # Create an empty matplotlib tool
-        if figsize is not None:
-            [self._canvas, self.axes] = plt.subplots(figsize=figsize)
+        if axes is not None:
+            self._canvas = axes.get_figure()
+            self._canvas.set_dpi(dpi)
+            self.axes = axes
+        elif figsize is not None:
+            [self._canvas, self.axes] = plt.subplots(figsize=figsize, dpi=dpi)
         else:
             [self._canvas, self.axes] = plt.subplots()
 
@@ -156,7 +160,7 @@ class Canvas(object):
 
             # Post addition
             if component.name is not None:
-                xy = component.Hinv.dot(np.array([8, -component.aperture/2-8, 1]))
+                xy = component.Hinv.dot(np.array([15, component.aperture-15, 1]))
                 self.axes.text(xy[0],
                                xy[1],
                                component.name,
